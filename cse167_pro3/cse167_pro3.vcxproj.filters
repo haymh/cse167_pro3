@@ -13,6 +13,7 @@
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="Vector3d.cpp" />
     <ClCompile Include="Vector4.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -20,5 +21,6 @@
     <ClInclude Include="parser.h" />
     <ClInclude Include="Vector3d.h" />
     <ClInclude Include="Vector4d.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
 </Project>
