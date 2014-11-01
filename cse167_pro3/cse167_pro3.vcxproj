@@ -79,7 +79,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Matrix4d.cpp" />
+    <ClCompile Include="parser.cpp" />
+    <ClCompile Include="Vector3d.cpp" />
+    <ClCompile Include="Vector4.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Matrix4d.h" />
+    <ClInclude Include="parser.h" />
+    <ClInclude Include="Vector3d.h" />
+    <ClInclude Include="Vector4d.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
