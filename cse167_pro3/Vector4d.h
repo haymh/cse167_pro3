@@ -2,6 +2,7 @@
 #define _VECTOR4_H_
 
 #include "GL/glew.h"
+#include "Vector3d.h"
 
 class Vector4d
 {
@@ -19,6 +20,7 @@ public:
 	Vector4d operator+(Vector4d & another);
 	void add(Vector4d & another);
 	Vector4d operator-(Vector4d & another);
+	Vector3d getVector3d();
 	void substract(Vector4d & another);
 	void dehomogenize();
 	void print();

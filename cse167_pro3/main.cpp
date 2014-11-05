@@ -9,10 +9,16 @@ int main(int argc, char** argv) {
 	glutInitWindowSize(Window::getWidth(), Window::getHeight());
 	glutCreateWindow("Rasterizer");
 
-	//loadData();
+	//loadData(); // load cloud point
 
 	glutReshapeFunc(Window::reshapeCallback);
 	glutDisplayFunc(Window::displayCallback);
 	glutKeyboardFunc(Window::keyboardCallback);
+	glutIdleFunc(Window::idleCallback);
+	glutMouseFunc(Window::mouseProcess);
+	glutMotionFunc(Window::mouseMotionProcess);
+	glutPassiveMotionFunc(Window::mousePassiveMotionProcess);
+	glutSpecialFunc(Window::processSpecialKeys);
+	Window::loadFiles();
 	glutMainLoop();
 }
