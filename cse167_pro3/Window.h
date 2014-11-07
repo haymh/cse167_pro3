@@ -64,7 +64,7 @@ private:
 	static void fakeDiffuseSwitch(bool b);
 	static void setLight(PointLight);
 	static float getZ(int x, int y);
-	static void setZ(int x, int y, int z);
+	static bool setZ(int x, int y, double z);
 	static void drawSphericalPoint(int x, int y, double z, float r, float g, float b, Vector3d normalPoint, Vector3d normalLight);
 	static void calculateFakeDiffuse(int x0, int y0, int radius, int x1, int y1, Vector3d normalPoint, Vector3d normalLight, double& r, double& g, double& b);
 	static void drawPoint(int x, int y, float r, float g, float b);

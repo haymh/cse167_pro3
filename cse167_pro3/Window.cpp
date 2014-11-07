@@ -95,8 +95,15 @@ float Window::getZ(int x, int y){
 	return zbuffer[y * width + x];
 }
 
-void Window::setZ(int x, int y, int z){
-	zbuffer[y * width + x] = z;
+bool Window::setZ(int x, int y, double z){
+	if (x < 0 || x > width || y < 0 || y > height)
+		return false;
+	if (z < getZ(x, y)){
+		zbuffer[y * width + x] = z;
+		return true;
+	}
+	else
+		return false;
 }
 
 void Window::writePoint(double& x, double& y, double& z){
@@ -113,12 +120,13 @@ void Window::writeNormal(Vector3d& n){
 void Window::drawPoint(int x, int y, double z, float r, float g, float b)
 {
 	if (adjustPointEnable){
-		int size = 3;
-		if (r < 0.1 && g < 0.1 && b < 0.1)
-			size = 2;
-		if (z < 0.9)
+		int size = 1;
+		
+		if (z < 0.96)
 			size++;
-		if (z < 0.935)
+		if (z < 0.95)
+			size++;
+		if (z < 0.94)
 			size++;
 		if (z < 0.93)
 			size++;
@@ -132,9 +140,18 @@ void Window::drawPoint(int x, int y, double z, float r, float g, float b)
 			for (int j = 0; j < size; j++){
 				int offset = startY * width * 3 + startX * 3;
 				if (offset <= limit && offset >= 0){
-					pixels[offset] = r;
-					pixels[offset + 1] = g;
-					pixels[offset + 2] = b;
+					if (zbufferEnable){
+						if (setZ(startX, startY, z)){
+							pixels[offset] = r;
+							pixels[offset + 1] = g;
+							pixels[offset + 2] = b;
+						}
+					}
+					else{
+						pixels[offset] = r;
+						pixels[offset + 1] = g;
+						pixels[offset + 2] = b;
+					}
 					startX++;
 				}
 			}
@@ -167,12 +184,12 @@ void Window::drawSphericalPoint(int x0, int y0, double z, float r, float g, floa
 	double _r = r;
 	double _g = g;
 	double _b = b;
-	int ri = 3;
-	if (r < 0.1 && g < 0.1 && b < 0.1)
-		ri = 1;
-	if (z < 0.999)
+	int ri = 1;
+	if (z < 0.96)
 		ri++;
-	if (z < 0.935)
+	if (z < 0.95)
+		ri++;
+	if (z < 0.94)
 		ri++;
 	if (z < 0.93)
 		ri++;
@@ -184,28 +201,74 @@ void Window::drawSphericalPoint(int x0, int y0, double z, float r, float g, floa
 		while (x >= y){
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, x + x0, y + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(x + x0, y + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(x + x0, y + y0, z))
+					drawPoint(x + x0, y + y0, _r, _g, _b);
+			}
+			else{
+				drawPoint(x + x0, y + y0, _r, _g, _b);
+			}
+
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, y + x0, x + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(y + x0, x + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(y + x0, x + y0, z))
+					drawPoint(y + x0, x + y0, _r, _g, _b);
+			}
+			else
+			{
+				drawPoint(y + x0, x + y0, _r, _g, _b);
+			}
+
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, -x + x0, y + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(-x + x0, y + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(-x + x0, y + y0, z))
+					drawPoint(-x + x0, y + y0, _r, _g, _b);
+			}else
+				drawPoint(-x + x0, y + y0, _r, _g, _b);
+
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, -y + x0, x + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(-y + x0, x + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(-y + x0, x + y0, z)){
+					drawPoint(-y + x0, x + y0, _r, _g, _b);
+				}
+			}else
+				drawPoint(-y + x0, x + y0, _r, _g, _b);
+			
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, -x + x0, -y + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(-x + x0, -y + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(-x + x0, -y + y0, z))
+					drawPoint(-x + x0, -y + y0, _r, _g, _b);
+			}else
+				drawPoint(-x + x0, -y + y0, _r, _g, _b);
+			
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, -y + x0, -x + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(-y + x0, -x + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(-y + x0, -x + y0, z))
+					drawPoint(-y + x0, -x + y0, _r, _g, _b);
+			}else
+				drawPoint(-y + x0, -x + y0, _r, _g, _b);
+			
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, x + x0, -y + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(x + x0, -y + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(x + x0, -y + y0, z))
+					drawPoint(x + x0, -y + y0, _r, _g, _b);
+			}else
+				drawPoint(x + x0, -y + y0, _r, _g, _b);
+			
 			if (fakeDiffuseEnable)
 				calculateFakeDiffuse(x0, y0, ri, y + x0, -x + y0, normalPoint, normalLight, _r, _g, _b);
-			drawPoint(y + x0, -x + y0, _r, _g, _b);
+			if (zbufferEnable){
+				if (setZ(y + x0, -x + y0, z))
+					drawPoint(y + x0, -x + y0, _r, _g, _b);
+			}else
+				drawPoint(y + x0, -x + y0, _r, _g, _b);
+			
 			y++;
 			if (radiusError < 0)
 			{
@@ -222,7 +285,12 @@ void Window::drawSphericalPoint(int x0, int y0, double z, float r, float g, floa
 		y = 0;
 		radiusError = 1 - x;
 	}
-	drawPoint(x0, y0, r, g, b);
+	if (zbufferEnable){
+		if (setZ(x0, y0, z))
+			drawPoint(x0, y0, r, g, b);
+	}else
+		drawPoint(x0, y0, r, g, b);
+	
 }
 
 void Window::calculateFakeDiffuse(int x0, int y0, int radius, int x1, int y1, Vector3d normalPoint, Vector3d normalLight, double& r, double& g, double& b){
@@ -284,16 +352,19 @@ void Window::rasterize()
 			continue;
 		}
 		v4 = viewport * v4;
-		//v4.dehomogenize();
+		v4.dehomogenize();
+		int x = v4[0] + 0.5;
+		int y = v4[1] + 0.5;
+		if (sphericalPointEnable)
+			drawSphericalPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2], n.getVector3d().normalize(), l);
+		else
+			drawPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2]);
+		/*
 		if (zbufferEnable){
-			int x = v4[0] + 0.5;
-			int y = v4[1] + 0.5;
+			
 			if (v4[2] < getZ(x, y)){
 				setZ(x, y, v4[2]);
-				if (sphericalPointEnable)
-					drawSphericalPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2], n.getVector3d().normalize(), l);
-				else
-					drawPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2]);
+				
 			}
 		}
 		else{
@@ -304,6 +375,7 @@ void Window::rasterize()
 			else
 				drawPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2]);
 		}
+		*/
 
 	}
 	
