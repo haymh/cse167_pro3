@@ -296,11 +296,19 @@ void Window::drawSphericalPoint(int x0, int y0, double z, float r, float g, floa
 void Window::calculateFakeDiffuse(int x0, int y0, int radius, int x1, int y1, Vector3d normalPoint, Vector3d normalLight, double& r, double& g, double& b){
 	if (r <= 0 && g <= 0 && b <= 0)
 		return;
-	Vector3d n(x1 - x0, y1 - y0, (sqrt(radius*radius + (y1 - y0) * (y1 - y0))));
+	double x = normalPoint[0] * radius + x0;
+	double y = normalPoint[1] * radius + y0;
+	double d = radius - sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y));
+	
+	//Vector3d n(x1 - x0, y1 - y0, (sqrt(radius*radius - (y1 - y0) * (y1 - y0) - (x1 - x0)* (x1 - x0))));
+	//n.normalize();
+	/*
 	normalPoint.scale(radius);
 	n.add(normalPoint);
 	n.normalize();
-	double factor = n.dot(normalLight);
+	*/
+	//double factor = n.dot(normalPoint);
+	double factor = d / radius;
 	r *= factor;
 	g *= factor;
 	b *= factor;
@@ -318,29 +326,14 @@ void Window::rasterize()
 		Vector4d n(normals[i][0], normals[i][1], normals[i][2], 0);
 		n = m * n;
 		Vector3d v3 = v4.getVector3d();
+		Vector3d n3 = n.getVector3d();
+		n3.normalize();
 		Vector3d l = pl.pos - v3;				// light position - position of the point
 		if (lightEnable){
-			/*
-			double ld = 0.1 * l.magnitude();
-			double qd = 0.1 * ld * ld;
-			rgb.set(0, pl.c.rgb[0] / (1 + ld + qd));
-			rgb.set(1, pl.c.rgb[1] / (1 + ld + qd));
-			rgb.set(2, pl.c.rgb[2] / (1 + ld + qd));
-			l.normalize();
-			//double reflect = normals[i].dot(l);
-			Vector3d n3 = n.getVector3d();
-			n3.normalize();
-			double reflect = n3.dot(l);
-			reflect = max(0, reflect);
-			//cout << reflect << endl;
-			rgb.scale(reflect);
-			*/
 			Vector3d Li = pl.c.rgb;
 			double d = l.magnitude();
 			Li.scale(1 / (d * d));
 			l.normalize();
-			Vector3d n3 = n.getVector3d();
-			n3.normalize();
 			double factor = 1 / M_PI * (n3.dot(l));
 			Li.scale(factor);
 			rgb = Li;
@@ -356,7 +349,7 @@ void Window::rasterize()
 		int x = v4[0] + 0.5;
 		int y = v4[1] + 0.5;
 		if (sphericalPointEnable)
-			drawSphericalPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2], n.getVector3d().normalize(), l);
+			drawSphericalPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2], n3, l);
 		else
 			drawPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2]);
 		/*
