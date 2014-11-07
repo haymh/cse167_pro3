@@ -44,8 +44,8 @@ Matrix4d Projection::viewport(int x, int y, int w, int h){
 	
 	Matrix4d m;
 	m.identity();
-	m.set(0, 0, (double(w) - double(x)) / 2);
-	m.set(1, 1, (double(h) - double(y)) / 2);
+	m.set(0, 0, (double(w)) / 2);
+	m.set(1, 1, (double(h)) / 2);
 	m.set(2, 2, 0.5);
 	m.set(3, 0, (2 * double(x) + double(w)) / 2);
 	m.set(3, 1, (2 * double(y) + double(h)) / 2);

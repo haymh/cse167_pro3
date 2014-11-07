@@ -25,7 +25,7 @@ int old_x, old_y;
 bool pressed;
 Matrix4d Window::viewport;
 Matrix4d Window::projection;
-Camera Window::camera(Vector3d(0,0,-20), Vector3d(0,0,0), Vector3d(0,1,0));
+Camera Window::camera(Vector3d(0,0,20), Vector3d(0,0,0), Vector3d(0,1,0));
 Matrix4d Window::model;
 Matrix4d Window::rotateY;
 Matrix4d Window::scaling;
@@ -51,6 +51,7 @@ double bunny_xmin, bunny_xmax, bunny_ymin, bunny_ymax, bunny_zmin, bunny_zmax, d
 vector<Vector3d> bunnyNor;
 vector<Vector3d> dragonNor;
 bool bunny = true;
+
 
 
 void Window::loadFiles(){
@@ -98,13 +99,13 @@ void Window::setZ(int x, int y, int z){
 	zbuffer[y * width + x] = z;
 }
 
-void Window::writePoint(double x, double y, double z){
+void Window::writePoint(double& x, double& y, double& z){
 	vertices.push_back(x);
 	vertices.push_back(y);
 	vertices.push_back(z);
 }
 
-void Window::writeNormal(Vector3d n){
+void Window::writeNormal(Vector3d& n){
 	normals.push_back(n);
 }
 
@@ -112,13 +113,16 @@ void Window::writeNormal(Vector3d n){
 void Window::drawPoint(int x, int y, double z, float r, float g, float b)
 {
 	if (adjustPointEnable){
-		int size = 4;
-		if (z < 0.99)
-			size++;
+		int size = 3;
+		if (r < 0.1 && g < 0.1 && b < 0.1)
+			size = 2;
 		if (z < 0.9)
 			size++;
-		if (z < 0.85)
+		if (z < 0.935)
 			size++;
+		if (z < 0.93)
+			size++;
+
 		int right = size / 2;
 		int left = right - (size - 1) % 2;
 		int startX = x - left;
@@ -148,9 +152,6 @@ void Window::drawPoint(int x, int y, double z, float r, float g, float b)
 	}
 }
 
-void Window::drawPoint(int x, int y, double z, double cameraZ, float& r, float& g, float& b){
-
-}
 
 void Window::drawPoint(int x, int y, float r, float g, float b){
 	int offset = y*width * 3 + x * 3;
@@ -167,10 +168,15 @@ void Window::drawSphericalPoint(int x0, int y0, double z, float r, float g, floa
 	double _g = g;
 	double _b = b;
 	int ri = 3;
-	if (z < 0.95)
+	if (r < 0.1 && g < 0.1 && b < 0.1)
+		ri = 1;
+	if (z < 0.999)
 		ri++;
-	if (z < 0.85)
+	if (z < 0.935)
 		ri++;
+	if (z < 0.93)
+		ri++;
+	
 	int x = ri;
 	int y = 0;
 	int radiusError = 1 - x;
@@ -271,14 +277,14 @@ void Window::rasterize()
 			Li.scale(factor);
 			rgb = Li;
 		}
-		v4 = camera.getMatrix() * v4;
+		//v4 = camera.getMatrix() * v4;
 		v4 = projection * v4;
 		v4.dehomogenize();
 		if (v4[0] < -1 || v4[0] > 1 || v4[1] < -1 || v4[1] > 1 || v4[2] < -1 || v4[2] > 1){
 			continue;
 		}
 		v4 = viewport * v4;
-		v4.dehomogenize();
+		//v4.dehomogenize();
 		if (zbufferEnable){
 			int x = v4[0] + 0.5;
 			int y = v4[1] + 0.5;
@@ -300,6 +306,7 @@ void Window::rasterize()
 		}
 
 	}
+	
 }
 
 // Called whenever the window size changes
@@ -406,14 +413,14 @@ void Window::displayCallback()
 {
 	clearBuffer();
 	if (bunny){
-		model = scaling * rotateY * scale_bunny * tran_bunny;
+		model = camera.getMatrix() * scaling * rotateY * scale_bunny * tran_bunny;
 		for (int i = 0; i < bunnyNor.size(); i++){
 			writeNormal(bunnyNor[i]);
 			writePoint(bunnyPos[i * 3], bunnyPos[i * 3 + 1], bunnyPos[i * 3 + 2]);
 		}
 	}
 	else{
-		model = scaling * rotateY * scale_dragon * tran_dragon;
+		model = camera.getMatrix() * scaling * rotateY * scale_dragon * tran_dragon;
 		for (int i = 0; i < dragonNor.size(); i++){
 			writeNormal(dragonNor[i]);
 			writePoint(dragonPos[i * 3], dragonPos[i * 3 + 1], dragonPos[i * 3 + 2]);
@@ -433,8 +440,12 @@ void Window::mouseMotionProcess(int x, int y){
 	old_x = x;
 	old_y = y;
 	if (pressed){
-		temp.makeRotateY(dx);
-		rotateY.multiply(temp);
+		angle += dx;
+		if (angle < 0)
+			angle = 360;
+		if (angle > 360)
+			angle = 0;
+		rotateY.makeRotateY(angle);
 	}
 }
 

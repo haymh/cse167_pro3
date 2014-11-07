@@ -55,8 +55,8 @@ private:
 	static bool fakeDiffuseEnable;
 	static PointLight pl;
 
-	static void writePoint(double, double, double);
-	static void writeNormal(Vector3d);
+	static void writePoint(double&, double&, double&);
+	static void writeNormal(Vector3d &);
 	static void lightSwitch(bool);
 	static void zbufferSwitch(bool);
 	static void adjustPointSwitch(bool);
@@ -68,7 +68,6 @@ private:
 	static void drawSphericalPoint(int x, int y, double z, float r, float g, float b, Vector3d normalPoint, Vector3d normalLight);
 	static void calculateFakeDiffuse(int x0, int y0, int radius, int x1, int y1, Vector3d normalPoint, Vector3d normalLight, double& r, double& g, double& b);
 	static void drawPoint(int x, int y, float r, float g, float b);
-	static void drawPoint(int x, int y, double z, double cameraZ, float& r, float& g, float& b);
 	static void renderBitmapString(float x, float y, void *font, const char *string);
 
 
