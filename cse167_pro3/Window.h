@@ -2,6 +2,7 @@
 #define _WINDOW_H_
 
 #include "Matrix4d.h"
+#include "Camera.h"
 #include <vector>
 
 struct Color{
@@ -43,7 +44,7 @@ private:
 	static float* zbuffer;
 	static Matrix4d viewport;
 	static Matrix4d projection;
-	static Matrix4d camera;
+	static Camera camera;
 	static Matrix4d model;
 	static Matrix4d scaling;
 	static Matrix4d rotateY;

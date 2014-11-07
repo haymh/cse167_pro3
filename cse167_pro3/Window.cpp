@@ -20,12 +20,12 @@ bool Window::zbufferEnable = false;
 bool Window::adjustPointEnable = false;
 bool Window::sphericalPointEnable = false;
 bool Window::fakeDiffuseEnable = false;
-PointLight Window::pl = { Color{ Vector3d(400.0, 400.0, 280.0) }, Vector3d(-5, 10, -10) };
+PointLight Window::pl = { Color{ Vector3d(400.0, 400.0, 280.0) }, Vector3d(0, 10, -10) };
 int old_x, old_y;
 bool pressed;
 Matrix4d Window::viewport;
 Matrix4d Window::projection;
-Matrix4d Window::camera;
+Camera Window::camera(Vector3d(0,0,-20), Vector3d(0,0,0), Vector3d(0,1,0));
 Matrix4d Window::model;
 Matrix4d Window::rotateY;
 Matrix4d Window::scaling;
@@ -243,8 +243,6 @@ void Window::rasterize()
 		v4 = m * v4;
 		Vector4d n(normals[i][0], normals[i][1], normals[i][2], 0);
 		n = m * n;
-		//n.dehomogenize()
-		v4.dehomogenize();
 		Vector3d v3 = v4.getVector3d();
 		Vector3d l = pl.pos - v3;				// light position - position of the point
 		if (lightEnable){
@@ -273,6 +271,7 @@ void Window::rasterize()
 			Li.scale(factor);
 			rgb = Li;
 		}
+		v4 = camera.getMatrix() * v4;
 		v4 = projection * v4;
 		v4.dehomogenize();
 		if (v4[0] < -1 || v4[0] > 1 || v4[1] < -1 || v4[1] > 1 || v4[2] < -1 || v4[2] > 1){
@@ -317,9 +316,9 @@ void Window::reshapeCallback(int new_width, int new_height)
 	viewport.print("view port");
 	projection = Projection::perspective(60, double(width) / double(height), 1.0, 1000.0);
 	projection.print("projection");
-	Matrix4d t;
-	t.makeTranslate(0, 0, -20);
-	projection = projection * t;
+	//Matrix4d t;
+	//t.makeTranslate(0, 0, -20);
+	//projection = projection * t;
 
 
 	// calculate scaling matrix for bunny
