@@ -96,5 +96,5 @@ void Vector4d::print(){
 }
 
 Vector3d Vector4d::getVector3d(){
-	return Vector3d(v[0] / v[3], v[1] / v[3], v[2] / v[3]);
+	return Vector3d(v[0], v[1], v[2]);
 }

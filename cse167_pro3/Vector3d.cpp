@@ -76,10 +76,11 @@ GLdouble Vector3d::magnitude(){
 	return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
-void Vector3d::normalize(){
+Vector3d& Vector3d::normalize(){
 	GLdouble m = magnitude();
 	for (int i = 0; i < 3; i++)
 		v[i] /= m;
+	return *this;
 }
 
 void Vector3d::print(char* msg){

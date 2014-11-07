@@ -20,7 +20,7 @@ bool Window::zbufferEnable = false;
 bool Window::adjustPointEnable = false;
 bool Window::sphericalPointEnable = false;
 bool Window::fakeDiffuseEnable = false;
-PointLight Window::pl = { Color{ Vector3d(2.0, 2.0, 1.4) }, Vector3d(0, 5, -10) };
+PointLight Window::pl = { Color{ Vector3d(400.0, 400.0, 280.0) }, Vector3d(-5, 10, -10) };
 int old_x, old_y;
 bool pressed;
 Matrix4d Window::viewport;
@@ -39,7 +39,7 @@ const int font = (int)GLUT_BITMAP_9_BY_15;
 double angle;
 
 float* Window::pixels = new float[width * height * 3];
-float* Window::zbuffer = new float[width * height];
+float* Window::zbuffer = new float[(width + 1) * (height + 1)];
 
 vector<double> bunnyPos;
 vector<double> dragonPos;
@@ -82,7 +82,8 @@ void Window::clearBuffer(){
 		pixels[i * 3 + 1] = clearColor.rgb[1];
 		pixels[i * 3 + 2] = clearColor.rgb[2];
 	}
-	for (int i = 0; i < width * height; i++){
+	int size = (width + 1) * (height + 1);
+	for (int i = 0; i < size; i++){
 		zbuffer[i] = 10;
 	}
 	vertices.clear();
@@ -111,68 +112,44 @@ void Window::writeNormal(Vector3d n){
 void Window::drawPoint(int x, int y, double z, float r, float g, float b)
 {
 	if (adjustPointEnable){
-		int size = 1;
+		int size = 4;
 		if (z < 0.99)
 			size++;
-		if (z < 0.97)
+		if (z < 0.9)
 			size++;
-		if (z < 0.95)
+		if (z < 0.85)
 			size++;
+		int right = size / 2;
+		int left = right - (size - 1) % 2;
+		int startX = x - left;
+		int startY = y - left;
 		int* offsets = new int[size * size];
-		switch (size){
-		case 1:
-			offsets[0] = y * width * 3 + x * 3;
-			break;
-		case 2:
-			offsets[0] = y * width * 3 + x * 3;
-			offsets[1] = offsets[0] + 3;
-			offsets[2] = offsets[0] + width * 3;
-			offsets[3] = offsets[2] + 3;
-			break;
-		case 3:
-			offsets[4] = y * width * 3 + x * 3;
-			offsets[1] = offsets[4] - width * 3;
-			offsets[7] = offsets[4] + width * 3;
-			offsets[0] = offsets[1] - 3;
-			offsets[2] = offsets[1] + 3;
-			offsets[3] = offsets[4] - 3;
-			offsets[5] = offsets[4] + 3;
-			offsets[6] = offsets[7] - 3;
-			offsets[8] = offsets[7] + 3;
-			break;
-		case 4:
-			offsets[5] = y * width * 3 + x * 3;
-			offsets[6] = offsets[5] + 3;
-			offsets[9] = offsets[5] + width * 3;
-			offsets[10] = offsets[9] + 3;
-			offsets[1] = offsets[5] - width * 3;
-			offsets[0] = offsets[1] - 3;
-			offsets[2] = offsets[1] + 3;
-			offsets[3] = offsets[2] + 3;
-			offsets[4] = offsets[5] - 3;
-			offsets[7] = offsets[6] + 3;
-			offsets[8] = offsets[9] - 3;
-			offsets[11] = offsets[10] + 3;
-			offsets[12] = offsets[8] + width * 3;
-			offsets[13] = offsets[12] + 3;
-			offsets[14] = offsets[13] + 3;
-			offsets[15] = offsets[14] + 3;
-		}
 		for (int i = 0; i < size; i++){
-			if (offsets[i] <= limit && offsets[i] >= 0){
-				pixels[offsets[i]] = r;
-				pixels[offsets[i] + 1] = g;
-				pixels[offsets[i] + 2] = b;
+			for (int j = 0; j < size; j++){
+				int offset = startY * width * 3 + startX * 3;
+				if (offset <= limit && offset >= 0){
+					pixels[offset] = r;
+					pixels[offset + 1] = g;
+					pixels[offset + 2] = b;
+					startX++;
+				}
 			}
+			startX = x - left;
+			startY++;
 		}
-		delete[] offsets;
 	}
 	else{
 		int offset = y*width * 3 + x * 3;
-		pixels[offset] = r;
-		pixels[offset + 1] = g;
-		pixels[offset + 2] = b;
+		if (offset <= limit && offset >= 0){
+			pixels[offset] = r;
+			pixels[offset + 1] = g;
+			pixels[offset + 2] = b;
+		}
 	}
+}
+
+void Window::drawPoint(int x, int y, double z, double cameraZ, float& r, float& g, float& b){
+
 }
 
 void Window::drawPoint(int x, int y, float r, float g, float b){
@@ -189,16 +166,10 @@ void Window::drawSphericalPoint(int x0, int y0, double z, float r, float g, floa
 	double _r = r;
 	double _g = g;
 	double _b = b;
-	int ri = 0;
+	int ri = 3;
 	if (z < 0.95)
 		ri++;
-	if (z < 0.9)
-		ri++;
 	if (z < 0.85)
-		ri++;
-	if (z < 0.83)
-		ri++;
-	if (z < 0.81)
 		ri++;
 	int x = ri;
 	int y = 0;
@@ -266,44 +237,67 @@ void Window::rasterize()
 	// Put your main rasterization loop here
 	// It should go over the point model and call drawPoint for every point in it
 	Vector3d rgb(1.0, 1.0, 1.0);
-	Matrix4d m(camera * model);
+	Matrix4d m(model);
 	for (int i = 0; i < normals.size(); i++){
 		Vector4d v4(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2], 1);
 		v4 = m * v4;
+		Vector4d n(normals[i][0], normals[i][1], normals[i][2], 0);
+		n = m * n;
+		//n.dehomogenize()
+		v4.dehomogenize();
 		Vector3d v3 = v4.getVector3d();
 		Vector3d l = pl.pos - v3;				// light position - position of the point
 		if (lightEnable){
+			/*
 			double ld = 0.1 * l.magnitude();
 			double qd = 0.1 * ld * ld;
 			rgb.set(0, pl.c.rgb[0] / (1 + ld + qd));
 			rgb.set(1, pl.c.rgb[1] / (1 + ld + qd));
 			rgb.set(2, pl.c.rgb[2] / (1 + ld + qd));
 			l.normalize();
-			double reflect = normals[i].dot(l);
-			rgb.set(0, rgb[0] * reflect);
-			rgb.set(1, rgb[1] * reflect);
-			rgb.set(2, rgb[2] * reflect);
+			//double reflect = normals[i].dot(l);
+			Vector3d n3 = n.getVector3d();
+			n3.normalize();
+			double reflect = n3.dot(l);
+			reflect = max(0, reflect);
+			//cout << reflect << endl;
+			rgb.scale(reflect);
+			*/
+			Vector3d Li = pl.c.rgb;
+			double d = l.magnitude();
+			Li.scale(1 / (d * d));
+			l.normalize();
+			Vector3d n3 = n.getVector3d();
+			n3.normalize();
+			double factor = 1 / M_PI * (n3.dot(l));
+			Li.scale(factor);
+			rgb = Li;
 		}
 		v4 = projection * v4;
 		v4.dehomogenize();
-		if (v4[0] < -1 || v4[0] > 1 || v4[1] < -1 || v4[1] > 1 || v4[2] < -1 || v4[2] > 1)
+		if (v4[0] < -1 || v4[0] > 1 || v4[1] < -1 || v4[1] > 1 || v4[2] < -1 || v4[2] > 1){
 			continue;
+		}
 		v4 = viewport * v4;
 		v4.dehomogenize();
 		if (zbufferEnable){
-			if (v4[2] < getZ(v4[0], v4[1])){
-				setZ(v4[0], v4[1], v4[2]);
+			int x = v4[0] + 0.5;
+			int y = v4[1] + 0.5;
+			if (v4[2] < getZ(x, y)){
+				setZ(x, y, v4[2]);
 				if (sphericalPointEnable)
-					drawSphericalPoint(v4[0], v4[1], v4[2], rgb[0], rgb[1], rgb[2], normals[i], l);
+					drawSphericalPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2], n.getVector3d().normalize(), l);
 				else
-					drawPoint(v4[0], v4[1], v4[2], rgb[0], rgb[1], rgb[2]);
+					drawPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2]);
 			}
 		}
 		else{
+			int x = v4[0] + 0.5;
+			int y = v4[1] + 0.5;
 			if (sphericalPointEnable)
-				drawSphericalPoint(v4[0], v4[1], v4[2], rgb[0], rgb[1], rgb[2], normals[i], l);
+				drawSphericalPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2], n.getVector3d().normalize(), l);
 			else
-				drawPoint(v4[0], v4[1], v4[2], rgb[0], rgb[1], rgb[2]);
+				drawPoint(x, y, v4[2], rgb[0], rgb[1], rgb[2]);
 		}
 
 	}
@@ -318,7 +312,7 @@ void Window::reshapeCallback(int new_width, int new_height)
 	delete[] pixels;
 	delete[] zbuffer;
 	pixels = new float[width * height * 3];
-	zbuffer = new float[width * height];
+	zbuffer = new float[(width + 1) * (height + 1)];
 	viewport = Projection::viewport(0, 0, width, height);
 	viewport.print("view port");
 	projection = Projection::perspective(60, double(width) / double(height), 1.0, 1000.0);
